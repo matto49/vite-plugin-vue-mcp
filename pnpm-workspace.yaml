@@ -8,9 +8,11 @@ catalog:
   '@modelcontextprotocol/sdk': ^1.7.0
   '@types/debug': ^4.1.12
   '@types/node': latest
+  '@vitejs/plugin-basic-ssl': ^2.0.0
   '@vitejs/plugin-vue': ^5.1.2
   '@vue/devtools-core': ^7.7.2
   '@vue/devtools-kit': ^7.7.2
+  '@vue/tsconfig': ^0.7.0
   ansis: ^3.17.0
   birpc: ^2.2.0
   bumpp: ^10.1.0
@@ -30,4 +32,16 @@ catalog:
   vite-plugin-vue-mcp: ^0.0.0
   vue: ^3.4.37
   vue-router: ^4.5.0
+  vue-tsc: ^2.2.4
   zod: ^3.24.2
+catalogs:
+  conflicts_vue_h3_5_13:
+    vue: ^3.5.13
+  conflicts_@vitejs/plugin-vue_h5_2_1:
+    '@vitejs/plugin-vue': ^5.2.1
+  conflicts_typescript_t5_7_2:
+    typescript: ~5.7.2
+  conflicts_vite_h6_2_0:
+    vite: ^6.2.0
+  conflicts_vite-plugin-vue-mcp_h0_3_2:
+    vite-plugin-vue-mcp: ^0.3.2

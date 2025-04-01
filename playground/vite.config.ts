@@ -1,3 +1,5 @@
+// 使用插件方式实现HTTPS
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import DevTools from 'vite-plugin-vue-devtools'
@@ -13,5 +15,7 @@ export default defineConfig({
       appendTo: 'src/main.ts',
     }),
     DevTools(),
+    // 使用basicSsl插件自动生成并配置证书
+    basicSsl(),
   ],
 })

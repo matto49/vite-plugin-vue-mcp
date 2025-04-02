@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import c from 'ansis'
+import DEBUG from 'debug'
 import { join } from 'pathe'
 import { normalizePath, searchForWorkspaceRoot } from 'vite'
 import { createRPCServer } from 'vite-dev-rpc'
@@ -18,13 +19,30 @@ function getVueMcpPath(): string {
 }
 const vueMcpResourceSymbol = '?__vue-mcp-resource'
 
+const debug = DEBUG('vite:mcp:server')
+
 export function VueMcp(options: VueMcpOptions = {}): Plugin {
   const {
     mcpPath = '/__mcp',
     updateCursorMcpJson = true,
     printUrl = true,
+    mcpHost = 'localhost',
+    mcpPort = 3456,
+    useHttps,
+    cursorUnsecureProxy = false,
+    cursorProxyPort = 3457,
     mcpServer = (vite: ViteDevServer, ctx: VueMcpContext) => import('./server').then(m => m.createMcpServerDefault(options, vite, ctx)),
   } = options
+
+  // 设置所有配置的默认值，确保options对象包含完整配置
+  options.mcpPath = mcpPath
+  options.mcpHost = mcpHost
+  options.mcpPort = mcpPort
+  options.useHttps = useHttps
+  options.cursorUnsecureProxy = cursorUnsecureProxy
+  options.cursorProxyPort = cursorProxyPort
+  options.updateCursorMcpJson = updateCursorMcpJson
+  options.printUrl = printUrl
 
   const cursorMcpOptions = typeof updateCursorMcpJson == 'boolean'
     ? { enabled: updateCursorMcpJson }
@@ -57,12 +75,23 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
 
       let mcp = await mcpServer(vite, ctx)
       mcp = await options.mcpServerSetup?.(mcp, vite) || mcp
-      await setupRoutes(mcpPath, mcp, vite)
+      await setupRoutes(mcpPath, mcp, vite, options)
 
       const port = vite.config.server.port || 5173
       const root = searchForWorkspaceRoot(vite.config.root)
+      const useHttps = options.useHttps ?? vite.config.server.https !== undefined
 
-      const sseUrl = `http://${options.host || 'localhost'}:${port}${mcpPath}/sse`
+      // 根据不同情况选择不同的URL
+      let sseUrl: string
+      if (useHttps && options.cursorUnsecureProxy) {
+        // 使用HTTP代理
+        sseUrl = `http://${options.mcpHost}:${options.cursorProxyPort}${mcpPath}/sse`
+      }
+      else {
+        // 使用原生Vite服务器
+        const protocol = useHttps ? 'https' : 'http'
+        sseUrl = `${protocol}://${options.mcpHost}:${port}${mcpPath}/sse`
+      }
 
       if (cursorMcpOptions.enabled) {
         if (existsSync(join(root, '.cursor'))) {
@@ -70,7 +99,14 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
             ? JSON.parse(await fs.readFile(join(root, '.cursor/mcp.json'), 'utf-8') || '{}')
             : {}
           mcp.mcpServers ||= {}
+
+          // 将当前URL添加到.cursor/mcp.json
           mcp.mcpServers[cursorMcpOptions.serverName || 'vue-mcp'] = { url: sseUrl }
+
+          if (useHttps && options.cursorUnsecureProxy) {
+            debug(`Using HTTP proxy URL for Cursor: ${sseUrl}`)
+          }
+
           await fs.writeFile(join(root, '.cursor/mcp.json'), `${JSON.stringify(mcp, null, 2)}\n`)
         }
       }

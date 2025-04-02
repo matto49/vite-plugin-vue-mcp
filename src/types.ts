@@ -34,6 +34,20 @@ export interface VueMcpOptions {
   host?: string
 
   /**
+   * The host for the MCP server
+   *
+   * @default 'localhost'
+   */
+  mcpHost?: string
+
+  /**
+   * The port for the MCP server
+   *
+   * @default 3456
+   */
+  mcpPort?: number
+
+  /**
    * Print the MCP server URL in the console
    *
    * @default true
@@ -83,4 +97,35 @@ export interface VueMcpOptions {
    * @default ''
    */
   appendTo?: string | RegExp
+
+  /**
+   * Force using HTTPS protocol for MCP server
+   * If not specified, will use the same protocol as the Vite server
+   *
+   * @default undefined (follow Vite server)
+   */
+  useHttps?: boolean
+
+  /**
+   * Enable a separate HTTP proxy server for Cursor to avoid SSL certificate issues
+   * This will create a plain HTTP server on a different port that Cursor can connect to
+   *
+   * @default false
+   */
+  cursorUnsecureProxy?: boolean
+
+  /**
+   * The port for the Cursor HTTP proxy server
+   * Only used when cursorUnsecureProxy is true
+   *
+   * @default 3457
+   */
+  cursorProxyPort?: number
+
+  /**
+   * Internal use only - stores the URL of the Cursor HTTP proxy
+   *
+   * @internal
+   */
+  cursorProxyUrl?: string
 }
